@@ -1,0 +1,222 @@
+<div class="apidocDiv">
+<style>
+/*csslint
+*/
+.apidocDiv {
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.apidocDiv a[href] {
+    color: #33f;
+    font-weight: bold;
+    text-decoration: none;
+}
+.apidocDiv a[href]:hover {
+    text-decoration: underline;
+}
+.apidocCodeCommentSpan {
+    background: #bbf;
+    color: #000;
+    display: block;
+}
+.apidocCodeKeywordSpan {
+    color: #d00;
+    font-weight: bold;
+}
+.apidocCodePre {
+    background: #eef;
+    border: 1px solid;
+    color: #777;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+.apidocFooterDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+.apidocModuleLi {
+    margin-top: 10px;
+}
+.apidocSectionDiv {
+    border-top: 1px solid;
+    margin-top: 20px;
+}
+.apidocSignatureSpan {
+    color: #777;
+    font-weight: bold;
+}
+</style>
+<h1>api documentation for
+    <a
+
+        href="yeoman.io"
+
+    >yosay (v2.0.0)</a>
+</h1>
+<h4>Tell Yeoman what to say</h4>
+<div class="apidocSectionDiv"><a
+    href="#apidoc.tableOfContents"
+    id="apidoc.tableOfContents"
+><h1>table of contents</h1></a><ol>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.yosay">module yosay</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.yosay.yosay">
+            function <span class="apidocSignatureSpan"></span>yosay
+            <span class="apidocSignatureSpan">(message, options)</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+</ol></div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.yosay" id="apidoc.module.yosay">module yosay</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.yosay.yosay" id="apidoc.element.yosay.yosay">
+        function <span class="apidocSignatureSpan"></span>yosay
+        <span class="apidocSignatureSpan">(message, options)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">(message, options) =&#x3e; {
+  message = (message || &#x27;Welcome to Yeoman, ladies and gentlemen!&#x27;).trim();
+  options = options || {};
+
+<span class="apidocCodeCommentSpan">  /*
+   * What you&#x27;re about to see may confuse you. And rightfully so. Here&#x27;s an
+   * explanation.
+   *
+   * When yosay is given a string, we create a duplicate with the ansi styling
+   * sucked out. This way, the true length of the string is read by `pad` and
+   * `wrap`, so they can correctly do their job without getting tripped up by
+   * the &#x22;invisible&#x22; ansi. Along with the duplicated, non-ansi string, we store
+   * the character position of where the ansi was, so that when we go back over
+   * each line that will be printed out in the message box, we check the
+   * character position to see if it needs any styling, then re-insert it if
+   * necessary.
+   *
+   * Better implementations welcome :)
+   */
+</span>
+  let maxLength = 24;
+  const styledIndexes = {};
+  let completedString = &#x27;&#x27;;
+  let topOffset = 4;
+
+  // Amount of characters of the yeoman character »column«      → `    /___A___\   /`
+  const YEOMAN_CHARACTER_WIDTH = 17;
+
+  // Amount of characters of the default top frame of the speech bubble → `╭──────────────────────────╮`
+  const DEFAULT_TOP_FRAME_WIDTH = 28;
+
+  // Amount of characters of a total line
+  let TOTAL_CHARACTERS_PER_LINE = YEOMAN_CHARACTER_WIDTH + DEFAULT_TOP_FRAME_WIDTH;
+
+  // The speech bubble will overflow the Yeoman character if the message is too long.
+  const MAX_MESSAGE_LINES_BEFORE_OVERFLOW = 7;
+
+  if (options.maxLength) {
+    maxLength = stripAnsi(message).toLowerCase().split(&#x27; &#x27;).sort()[0].length;
+
+    if (maxLength &#x3c; options.maxLength) {
+      maxLength = options.maxLength;
+      TOTAL_CHARACTERS_PER_LINE = maxLength + YEOMAN_CHARACTER_WIDTH + topOffset;
+    }
+  }
+
+  const regExNewLine = new RegExp(`\\s{${maxLength}}`);
+  const borderHorizontal = border.horizontal.repeat(maxLength + 2);
+
+  const frame = {
+    top: border.topLeft + borderHorizontal + border.topRight,
+    side: ansiStyles.reset.open + border.vertical + ansiStyles.reset.open,
+    bottom: ansiStyles.reset.open + border.bottomLeft + borderHorizontal + border.bottomRight
+  };
+
+  message.replace(ansiRegex, (match, offset) =&#x3e; {
+    Object.keys(styledIndexes).forEach(key =&#x3e; {
+      offset -= styledIndexes[key].length;
+    });
+
+    styledIndexes[offset] = styledIndexes[offset] ? styledIndexes[offset] + match : match;
+  });
+
+  return wrap(stripAnsi(message), maxLength, {hard: true})
+    .split(/\n/)
+    .reduce((greeting, str, index, array) =&#x3e; {
+      if (!regExNewLine.test(str)) {
+        str = str.trim();
+      }
+
+      completedString += str;
+
+      str = completedString
+        .substr(completedString.length - str.length)
+        .replace(/./g, (char, charIndex) =&#x3e; {
+          if (index &#x3e; 0) {
+            charIndex += completedString.length - str.length + index;
+          }
+
+          let hasContinuedStyle = 0;
+          let continuedStyle;
+
+          Object.keys(styledIndexes).forEach(offset =&#x3e; {
+            if (charIndex &#x3e; offset) {
+              hasContinuedStyle++;
+              continuedStyle = styledIndexes[offset];
+            }
+
+            if (hasContinuedStyle === 1 &#x26;&#x26; charIndex &#x3c; offset) {
+              hasContinuedStyle++;
+            }
+          });
+
+          if (styledIndexes[charIndex]) {
+            return styledIndexes[charIndex] + char;
+          } else if (hasContinuedStyle &#x3e;= 2) {
+            return continuedStyle + char;
+          }
+
+          return char;
+        })
+        .trim();
+
+      const paddedString = pad({
+        length: stringWidth(str),
+        valueOf() {
+          return ansiStyles.reset.open + str + ansiStyles.reset.open;
+        }
+      }, maxLength);
+
+      if (index === 0) {
+        // Need to adjust the top position of the speech bubble depending on the
+        // amount of lines of the message.
+        if (array.length === 2) {
+          topOffset -= 1;
+        }
+
+        if (array.length &#x3e;= 3) {
+          topOffset -= 2;
+        }
+
+        // The speech bubble will overflow the Yeoman character if the message
+        // is too long. So we vertically center the b ...</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocFooterDiv">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
